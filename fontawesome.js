@@ -26,17 +26,22 @@
     var root = zip.folder(folderName);
     var css = root.folder("css");
     var fonts = root.folder("fonts");
-    fetch(link.href).then(function(response) {
+    fetch(link.href, {
+        mode: 'cors', // no-cors, *cors, same-origin
+        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'same-origin', // include, *same-origin, omit
+    }).then(function(response) {
         var urles = {};
         response.text().then(function(style) {
             style = style.replace(/(?<=url\()([^\)]+)/g, function(url) {
                 var a = document.createElement("a"),
                     b = document.createElement("a");
                 a.href = url;
-                b.href = (location.origin == a.origin ? link.origin : a.origin) + a.pathname;
+                b.href = (location.origin == a.origin ? link.origin : a.origin) + `/releases/${version}` + a.pathname;
                 if (!urles[b.href]) {
-                    urles[b.href] = a.pathname.split('/').pop();
+                    urles[b.href] =a.pathname.split('/').pop();
                 }
+                console.log(b.href);
                 return '../fonts/' + urles[b.href] + a.search + a.hash;
             });
             css.file('pro.css', beautifier.css(style));
@@ -46,8 +51,12 @@
                 var url = urls.shift(),
                     name = urles[url],
                     callback = arguments.callee;
-                fetch(url).then(function(promise) {
-                    console.log(name);
+                fetch(url, {
+                    'mode': 'no-cors',
+                    headers: {
+                        'access-control-allow-origin': '*',
+                    }
+                }).then(function(promise) {
                     fonts.file(name, promise.arrayBuffer());
                     if (urls.length) {
                         callback(urls)
@@ -56,6 +65,8 @@
                             saveAs(source, folderName + ".zip");
                         });
                     }
+                }).catch((e) => {
+                    callback(urls);
                 });
             })(Object.keys(urles))
         });
