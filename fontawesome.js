@@ -52,10 +52,9 @@
                     name = urles[url],
                     callback = arguments.callee;
                 fetch(url, {
-                    'mode': 'no-cors',
-                    headers: {
-                        'access-control-allow-origin': '*',
-                    }
+                    mode: 'cors',
+                    cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                    credentials: 'same-origin', // include, *same-origin, omit
                 }).then(function(promise) {
                     fonts.file(name, promise.arrayBuffer());
                     if (urls.length) {
